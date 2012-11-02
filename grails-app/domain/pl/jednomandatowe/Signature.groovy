@@ -30,6 +30,9 @@ class Signature {
 		}
 	}
 	
+	String toString() {
+		firstName
+	}
 	
 	static {
 		grails.converters.JSON.registerObjectMarshaller(Signature) {

@@ -33,7 +33,7 @@ grails.project.dependency.resolution = {
     }
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
-
+        compile 'com.lazythought:easyhash:1.0'
         // runtime 'mysql:mysql-connector-java:5.1.20'
     }
 
@@ -54,6 +54,7 @@ grails.project.dependency.resolution = {
 
         compile ':cache:1.0.0'
 		compile ":quartz:1.0-RC2"
+        compile ":rest:0.7"
 		
     }
 }
