@@ -6,50 +6,96 @@ import static groovyx.net.http.ContentType.TEXT
 import static groovyx.net.http.ContentType.JSON
 import static com.lazythought.easyhash.HashGenerator.*
 import groovyx.net.http.HTTPBuilder
+import groovy.json.JsonSlurper
 
 class FreshmailService {
 
-    def getLatestSignatureToSynchronize() {
-    	def result =  Signature.findAll([max: 1, sort: "dateCreated", order: "desc"]){
-   			syncWithFreshMail == null
-   			province != null
-		}
-		result[0]
-	}
-
-	def getRequestContentInJSON(signature,listHash) {
-		def json = new groovy.json.JsonBuilder()					                            
-		json {
-			email  signature.email
-			list   listHash
-			custom_fields {
-				wojewodztwo signature.province
-				miejscowosc signature.city
-			}
-		}
-	 	json
-	}
+def grailsApplication
 	
-	//def callExternalServiceWithHttpJSON(url,path,apiKey,apiSecret,content)	{
-	//	withHttp(uri : url, contentType : JSON) {
-   	//					def result = post(path:path,
-	//									  headers:['User-Agent':'Mozilla/5.0','X-Rest-ApiKey' : apiKey,'X-Rest-ApiSign' : sha1(apiKey + path + content.toString() + apiSecret)],
-   	//						              body : content.toString()) { resp, json ->
-    //								      println 'got response!'
-    //  									  return json
-   	//									}
-    //					}
-    //}
+def synchronizeWithFreshmail() {
+    def entryToSynchronize = getLatestSignatureToSynchronize()
+    if (entryToSynchronize) {
+    def content = getRequestContentInJSON(entryToSynchronize,grailsApplication.config.freshmail.hashList)
+    content=content.toString()   
+    def response = callExternalServiceWithHttpJSON(grailsApplication.config.freshmail.url,
+      "/rest/subscriber/edit",
+      grailsApplication.config.freshmail.apiKey,
+      grailsApplication.config.freshmail.apiSecret,
+      content)
+    log.info response
+    entryToSynchronize.syncWithFreshMail = true
+    entryToSynchronize.save()
+    }
+  }
 
-    def callExternalServiceWithHttpJSON(url,path,apiKey,apiSecret,content) {
+
+ def addTOFreshmail() {    
+    def entryToSynchronize = getAddedSignature()
+    println "grailsApplication.config.freshmail.url ${grailsApplication.config.freshmail.url}"
+    if (entryToSynchronize) {
+    def content = getRequestContentInJSON(entryToSynchronize,grailsApplication.config.freshmail.hashList)
+    content=content.toString()    
+    def response = callExternalServiceWithHttpJSON(grailsApplication.config.freshmail.url,
+      "/rest/subscriber/add",
+      grailsApplication.config.freshmail.apiKey,
+      grailsApplication.config.freshmail.apiSecret,
+      content)
+    def slurper = new JsonSlurper()
+    response = slurper.parseText response
+    if (response.status != null && response.status == "OK") {   
+      entryToSynchronize.newSignature = false
+      entryToSynchronize.syncWithFreshMail = true
+      } else {
+        response.status ? log.error(response.status) : log.error("Non know problem")
+        entryToSynchronize.newSignature = false
+        entryToSynchronize.syncWithFreshMail = false        
+      } 
+      entryToSynchronize.save()   
+    } else {
+      println "Nothing to synchronize"
+    }
+  }
+
+
+
+ private def getLatestSignatureToSynchronize() {
+      def result =  Signature.findAll([max: 1, sort: "dateCreated", order: "desc"]){
+        syncWithFreshMail == null
+        province != null
+        newSignature == null
+    }
+    result[0]
+  }
+
+ private def getAddedSignature() {
+      def result =  Signature.findAll([max: 1, sort: "dateCreated", order: "desc"]){
+        syncWithFreshMail == null
+        province != null
+        newSignature == true
+    }
+    println "result[0] ${result[0]}"
+    result[0]
+  }
+
+  private def getRequestContentInJSON(signature,listHash) {
+    def json = new groovy.json.JsonBuilder()                                      
+    json {
+      email  signature.email
+      list   listHash
+      state 1
+      custom_fields {
+        "Imie" signature.firstName
+        "Nazwisko" signature.lastName
+        "Wojewodztwo" signature.province
+        "Miejscowosc" signature.city
+      }
+    }
+    json
+  }
+
+
+  private def callExternalServiceWithHttpJSON(url,path,apiKey,apiSecret,content) {
     	def json = new groovy.json.JsonBuilder()		
-    	//json
-		//{
-  		//	email '111mateusz.milian@gmail.com'
-  		//	list  'wa40b9beep'
-  		//}
-  		//println json
-  		//def c = json.toString()
 		def http = new HTTPBuilder( 'https://app.freshmail.pl' )
  		http.request(POST,JSON) { req ->
 			uri.path = path
@@ -63,16 +109,25 @@ class FreshmailService {
    	 			println "My response handler got response: ${resp.statusLine}"
    	 			println "Response length: ${resp.headers.'Content-Length'}"
    	 			println json2
-   	 			return json2
+   	 			return json2.toString()
   				}
  	 		// called only for a 404 (not found) status code:
-  			response.'404' = { resp ->
+  			response.'404' = { resp->
    	 			println 'Not found'
-  			}
-  			response.'500' = { resp,js ->
+          def json3 = new groovy.json.JsonBuilder()                                      
+          json3 {
+            "status"  "error 404"
+  			 }
+         return json3.toString()        
+        }
+        response.'500' = { resp ->
    	 			println 'Problem'
-   	 			println js
-  			}
-  		}
+   	 			 def json4 = new groovy.json.JsonBuilder()                                      
+          json4 {
+            "status"  "error 500"
+         }
+         return json4.toString()        
+        }  		
 	}
+}
 }

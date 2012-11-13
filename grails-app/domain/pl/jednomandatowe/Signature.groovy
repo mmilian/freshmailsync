@@ -12,7 +12,7 @@ class Signature {
 	Province province
 	boolean allow
 	Boolean syncWithFreshMail
-			
+	Boolean newSignature		
 	
 	
 	def beforeInsert() {
@@ -23,6 +23,7 @@ class Signature {
 		firstName(blank:false)
 		lastName(blank:false)
 		syncWithFreshMail(nullable:true)
+		newSignature(nullable:true)
 		email(blank:false)
 		email(nullable:false)
 		allow validator: {
