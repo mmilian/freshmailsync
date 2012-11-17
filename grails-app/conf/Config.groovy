@@ -2,7 +2,7 @@
 // config files can be ConfigSlurper scripts, Java properties files, or classes
 // in the classpath in ConfigSlurper format
 
-grails.config.locations = ["file:${ basedir }/grails-app/conf/FreshmailsyncConfig.groovy","classpath:FreshmailsyncConfig.groovy"] 
+grails.config.locations = ["file:${ basedir }/grails-app/conf/FreshmailsyncConfig.groovy"] 
 // "classpath:${appName}-config.properties",
 //                             "classpath:${appName}-config.groovy",
 //                             "file:${userHome}/.grails/${appName}-config.properties",
@@ -69,6 +69,11 @@ environments {
         // TODO: grails.serverURL = "http://www.changeme.com"
     }
 }
+freshmail.apiKey = System.env.FRESHMAIL_API_KEY
+freshmail.apiSecret = System.env.FRESHMAIL_API_SECRET
+freshmail.hashList = "6z51konvod"
+freshmail.url = "https://app.freshmail.pl"
+
 
 // log4j configuration
 log4j = {

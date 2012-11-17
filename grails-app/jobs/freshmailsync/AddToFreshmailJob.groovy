@@ -13,6 +13,6 @@ class AddToFreshmailJob {
     def execute() {
        println "Add entry to freshmail"
        freshmailService.addTOFreshmail()
-       log.info "End entry to freshmail"
+       println "End entry to freshmail"
     }
 }

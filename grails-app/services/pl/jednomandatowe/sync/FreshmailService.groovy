@@ -1,5 +1,6 @@
 package pl.jednomandatowe.sync
 import pl.jednomandatowe.Signature
+import pl.jednomandatowe.Province
 import groovy.json.JsonBuilder
 import static groovyx.net.http.Method.POST
 import static groovyx.net.http.ContentType.TEXT
@@ -16,15 +17,21 @@ def synchronizeWithFreshmail() {
     def entryToSynchronize = getLatestSignatureToSynchronize()
     if (entryToSynchronize) {
     def content = getRequestContentInJSON(entryToSynchronize,grailsApplication.config.freshmail.hashList)
-    content=content.toString()   
+    content=content.toString() 
+    println "Content to synchronize: $content"  
     def response = callExternalServiceWithHttpJSON(grailsApplication.config.freshmail.url,
       "/rest/subscriber/edit",
       grailsApplication.config.freshmail.apiKey,
       grailsApplication.config.freshmail.apiSecret,
       content)
-    log.info response
+    println "response $response"
     entryToSynchronize.syncWithFreshMail = true
-    entryToSynchronize.save()
+    entryToSynchronize.allow = true
+    if (!entryToSynchronize.save()) {
+      entryToSynchronize.errors.each {
+        println it
+    }
+    }
     }
   }
 
@@ -35,6 +42,7 @@ def synchronizeWithFreshmail() {
     if (entryToSynchronize) {
     def content = getRequestContentInJSON(entryToSynchronize,grailsApplication.config.freshmail.hashList)
     content=content.toString()    
+    println "Content to add: $content"  
     def response = callExternalServiceWithHttpJSON(grailsApplication.config.freshmail.url,
       "/rest/subscriber/add",
       grailsApplication.config.freshmail.apiKey,
@@ -50,7 +58,13 @@ def synchronizeWithFreshmail() {
         entryToSynchronize.newSignature = false
         entryToSynchronize.syncWithFreshMail = false        
       } 
-      entryToSynchronize.save()   
+      entryToSynchronize.allow = true
+      if (!entryToSynchronize.save()) {
+      entryToSynchronize.errors.each {
+        println it
+    }
+    }
+
     } else {
       println "Nothing to synchronize"
     }
@@ -73,7 +87,7 @@ def synchronizeWithFreshmail() {
         province != null
         newSignature == true
     }
-    println "result[0] ${result[0]}"
+    //println "result[0] ${result[0]}"
     result[0]
   }
 
