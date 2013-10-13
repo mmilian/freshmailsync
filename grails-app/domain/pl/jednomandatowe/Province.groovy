@@ -1,5 +1,4 @@
 package pl.jednomandatowe
-;
 
 public enum Province {
 		DOLNOSLASKIE("dolnośląskie"),KUJAWSKO_POMORSKIE("kujawsko-pomorskie"),

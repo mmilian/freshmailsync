@@ -1,5 +1,6 @@
 package pl.jednomandatowe.sync
 import pl.jednomandatowe.Signature
+import pl.jednomandatowe.Province
 import groovy.json.JsonBuilder
 import static groovyx.net.http.Method.POST
 import static groovyx.net.http.ContentType.TEXT
@@ -10,7 +11,33 @@ import groovy.json.JsonSlurper
 
 class FreshmailService {
 
+<<<<<<< HEAD
 	def grailsApplication
+=======
+def grailsApplication
+	
+def synchronizeWithFreshmail() {
+    def entryToSynchronize = getLatestSignatureToSynchronize()
+    if (entryToSynchronize) {
+    def content = getRequestContentInJSON(entryToSynchronize,grailsApplication.config.freshmail.hashList)
+    content=content.toString() 
+    println "Content to synchronize: $content"  
+    def response = callExternalServiceWithHttpJSON(grailsApplication.config.freshmail.url,
+      "/rest/subscriber/edit",
+      grailsApplication.config.freshmail.apiKey,
+      grailsApplication.config.freshmail.apiSecret,
+      content)
+    println "response $response"
+    entryToSynchronize.syncWithFreshMail = true
+    entryToSynchronize.allow = true
+    if (!entryToSynchronize.save()) {
+      entryToSynchronize.errors.each {
+        println it
+    }
+    }
+    }
+  }
+>>>>>>> 0a89ffc2cf0c5e375b40c69e8e535772f099cb2f
 
 	def synchronizeWithFreshmail() {
 		def entryToSynchronize = getLatestSignatureToSynchronize()
@@ -39,6 +66,42 @@ class FreshmailService {
 		}
 	}
 
+<<<<<<< HEAD
+=======
+ def addTOFreshmail() {    
+    def entryToSynchronize = getAddedSignature()
+    println "grailsApplication.config.freshmail.url ${grailsApplication.config.freshmail.url}"
+    if (entryToSynchronize) {
+    def content = getRequestContentInJSON(entryToSynchronize,grailsApplication.config.freshmail.hashList)
+    content=content.toString()    
+    println "Content to add: $content"  
+    def response = callExternalServiceWithHttpJSON(grailsApplication.config.freshmail.url,
+      "/rest/subscriber/add",
+      grailsApplication.config.freshmail.apiKey,
+      grailsApplication.config.freshmail.apiSecret,
+      content)
+    def slurper = new JsonSlurper()
+    response = slurper.parseText response
+    if (response.status != null && response.status == "OK") {   
+      entryToSynchronize.newSignature = false
+      entryToSynchronize.syncWithFreshMail = true
+      } else {
+        response.status ? log.error(response.status) : log.error("Non know problem")
+        entryToSynchronize.newSignature = false
+        entryToSynchronize.syncWithFreshMail = false        
+      } 
+      entryToSynchronize.allow = true
+      if (!entryToSynchronize.save()) {
+      entryToSynchronize.errors.each {
+        println it
+    }
+    }
+
+    } else {
+      println "Nothing to synchronize"
+    }
+  }
+>>>>>>> 0a89ffc2cf0c5e375b40c69e8e535772f099cb2f
 
 	def addTOFreshmail() {
 		def entryToSynchronize = getAddedSignature()
@@ -69,6 +132,7 @@ class FreshmailService {
 
 
 
+<<<<<<< HEAD
 	private def getLatestSignatureToSynchronize() {
 		def result =  Signature.findAll([max: 1, sort: "dateCreated", order: "desc"]){
 			syncWithFreshMail == null
@@ -77,6 +141,17 @@ class FreshmailService {
 		}
 		result[0]
 	}
+=======
+ private def getAddedSignature() {
+      def result =  Signature.findAll([max: 1, sort: "dateCreated", order: "desc"]){
+        syncWithFreshMail == null
+        province != null
+        newSignature == true
+    }
+    //println "result[0] ${result[0]}"
+    result[0]
+  }
+>>>>>>> 0a89ffc2cf0c5e375b40c69e8e535772f099cb2f
 
 	private def getAddedSignature() {
 		def result =  Signature.findAll([max: 1, sort: "dateCreated", order: "desc"]){

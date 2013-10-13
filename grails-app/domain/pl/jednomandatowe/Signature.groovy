@@ -27,8 +27,9 @@ class Signature {
 		email(blank:false)
 		email(nullable:false)
 		allow validator: {
-			if (!it) return ['must.be.checked']
+			if (!it) return ['must.be.checked']		
 		}
+		province(nullable:true)
 	}
 	
 	String toString() {
