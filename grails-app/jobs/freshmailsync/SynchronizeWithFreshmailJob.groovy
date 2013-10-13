@@ -6,7 +6,7 @@ class SynchronizeWithFreshmailJob {
      def freshmailService
 
     static triggers = {
-      simple repeatInterval: 5000l // execute job once in 5 seconds
+      simple repeatInterval: 2000l // execute job once in 5 seconds
     }
 
     def execute() {
