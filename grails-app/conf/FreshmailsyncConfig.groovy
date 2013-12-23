@@ -1,3 +1,4 @@
+freshmail.addSubscriber = "add"
 freshmail.apiKey = ""
 freshmail.apiSecret = ""
 freshmail.hashList = "6z51konvod"

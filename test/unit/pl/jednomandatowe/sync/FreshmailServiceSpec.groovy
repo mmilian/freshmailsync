@@ -13,8 +13,11 @@ import groovy.json.JsonBuilder
  */
 @Ignore
 @Mock([Signature])
-class FreshmailServiceSpec  extends spock.lang.Specification {
-    def "get the most fresh signature "() {
+class FreshmailServiceSpec extends spock.lang.Specification {
+    
+	def freshmailService
+		
+	def "synchronize the latest contact "() {
         setup:							
 		mockDomain(Signature,[
 			[firstName: "test1", lastName: "test1", city : "Warszawa", email:"test1@test1.pl",dateCreated : new Date()-1,province : Province.DOLNOSLASKIE, allow : true, syncWithFreshMail : null],
@@ -22,26 +25,24 @@ class FreshmailServiceSpec  extends spock.lang.Specification {
 			[firstName: "test3", lastName: "test2", city : "Warszawa", email:"test3@test2.pl",dateCreated : new Date()+1,province : null, allow : true, syncWithFreshMail : null]		
 			])		
 		when:
-        def result = service.getLatestSignatureToSynchronize()        
+        freshmailService.synchronizeContact()       
         then:
-        result.email == "test2@test2.pl"
-    }
+        Signature.getByEmail("test2@test2.pl")[0].syncWithFreshMail == true 
+	}
 
-    def "return JSON data for content of request to Freshmail"() {
-    	setup:									
-		def signature = new Signature(firstName: "test1", lastName: "test1", city : "Warszawa", email:"test1@test1.pl",dateCreated : new Date()-1,province : Province.DOLNOSLASKIE, allow : true, syncWithFreshMail : null)
-		def json = new groovy.json.JsonBuilder()
-		json {
-			email "test1@test1.pl"
-			list  '6z51konvod'
-			//custom_fields {
-			//	wojewodztwo 'DOLNOSLASKIE'
-			//	miejscowosc 'Warszawa'
-			//}
-		}
+	def "add latest contact"() {
+		setup:
+		mockDomain(Signature,[
+			[firstName: "test1", lastName: "test1", city : "Warszawa", email:"test1@test1.pl",dateCreated : new Date()-1,province : Province.DOLNOSLASKIE, allow : true, syncWithFreshMail : null, newSignature : true],
+			[firstName: "test2", lastName: "test2", city : "Warszawa", email:"test2@test2.pl",dateCreated : new Date(),province : Province.DOLNOSLASKIE, allow : true, syncWithFreshMail : null, newSignature : true],
+			[firstName: "test3", lastName: "test2", city : "Warszawa", email:"test3@test2.pl",dateCreated : new Date()+1,province : null, allow : true, syncWithFreshMail : null, newSignature : true]
+			])
 		when:
-        def result = service.getRequestContentInJSON(signature,'6z51konvod')        
-        then:
-        result.toString() == json.toString()			
-    }
+		freshmailService.addContact()
+		then:
+		Signature.getByEmail("test2@test2.pl")[0].syncWithFreshMail == true
+		Signature.getByEmail("test2@test2.pl")[0].newSignature == false
+	}
+
+	
 }

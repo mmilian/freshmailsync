@@ -9,9 +9,9 @@ class SynchronizeController {
 	def freshmailService
 
 	def synchronizeWithFreshmail() {
-		def entryToSynchronize = freshmailService.getLatestSignatureToSynchronize()
+		def entryToSynchronize = freshmailService.getLatestContactToSynchronize()
 		println entryToSynchronize
-		def content = freshmailService.getRequestContentInJSON(entryToSynchronize,grailsApplication.config.freshmail.hashList)
+		def content = freshmailService.getContentInJSON(entryToSynchronize,grailsApplication.config.freshmail.hashList)
 		content=content.toString()
 		def response = freshmailService.callExternalServiceWithHttpJSON(grailsApplication.config.freshmail.url,
 			"/rest/subscriber/add",
